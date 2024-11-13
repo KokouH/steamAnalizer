@@ -12,7 +12,14 @@ class Parser:
         if page == None:
             return None
         x = page.find('Market_LoadOrderSpread(') + 24
-        return int(page[x: x  + page[x:].find(' ')])
+        itemid = None
+        try:
+            itemid = int(page[x: x  + page[x:].find(' ')])
+        except:
+            pass 
+        finally:
+            return itemid
+        
 
     def get_item_page(self, hash_name: str, appid: int = 252490):
         res = self.ses.get(f'https://steamcommunity.com/market/listings/{appid}/{hash_name}')

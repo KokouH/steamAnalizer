@@ -102,6 +102,9 @@ def main():
     for TEST_ITEM in item_hash_names:
         parser.get_item_page(TEST_ITEM)
         itemId = parser.get_itemid_from_page(parser.last_page)
+        if parser.last_page == None or itemId == None:
+            time.sleep(90)
+            continue
         histogram = parser.get_item_histogram(itemId)
         history = parser.get_history(parser.last_page)
         data = {
@@ -122,7 +125,10 @@ def main():
             bad_file.write(f"{TEST_ITEM}\n")
             bad_file.flush()
 
-        time.sleep(4)
+        time.sleep(10)
+
+    bad_file.close()
+    good_file.close()
 
 if __name__ == "__main__":
     main()
