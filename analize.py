@@ -96,7 +96,7 @@ def check_sell_in_history(data):
         if i[1] >= data['reference_price']:
             above_sells += int(i[2])
 
-    return above_sells / all_sells > 
+    return above_sells / all_sells > sell_conf
 
 def main():
     good_file = open('goods', 'w')
@@ -112,7 +112,7 @@ def main():
         check_sells_count,
         check_price_trend,
         check_deep_in_cup,
-
+        check_sell_in_history
     ])
 
     for TEST_ITEM in item_hash_names:
@@ -123,11 +123,12 @@ def main():
             continue
         histogram = parser.get_item_histogram(itemId)
         history = parser.get_history(parser.last_page)
-        buy_price = data['reference_price'] * .87 * (1 - wanted_profit /  100)
+        reference_price = histogram['sell_order_graph'][0][0]
+        buy_price = reference_price * .87 * (1 - wanted_profit /  100)
         data = {
             'history': history,
             'histogram': histogram,
-            'reference_price': histogram['sell_order_graph'][0][0],
+            'reference_price': reference_price,
             'buy_price': buy_price,
         }
 
