@@ -11,9 +11,10 @@ from Validator import Validator
 # Main params
 min_sells_per_month = 60
 wanted_profit = 10
-max_deeps = 14
-trend_max = 1.2
-trend_min = 0.9
+max_deeps = 7
+trend_max = 1.15
+trend_min = 0.95
+sell_conf = 0.1
 
 # Spike clean params
 WINDOW_SIZE = 10
@@ -82,6 +83,21 @@ def check_price_trend(data):
 
     return m < trend_max and m > trend_min
 
+def check_sell_in_history(data):
+    history = get_last_month(data['history'])
+    history = remove_spikes(history)
+
+    all_sells = 0
+    for i in history:
+        all_sells += int(i[2])
+
+    above_sells = 0
+    for i in history:
+        if i[1] >= data['reference_price']:
+            above_sells += int(i[2])
+
+    return above_sells / all_sells > 
+
 def main():
     good_file = open('goods', 'w')
     bad_file = open('bad', 'w')
@@ -107,14 +123,15 @@ def main():
             continue
         histogram = parser.get_item_histogram(itemId)
         history = parser.get_history(parser.last_page)
+        buy_price = data['reference_price'] * .87 * (1 - wanted_profit /  100)
         data = {
             'history': history,
             'histogram': histogram,
-            'reference_price': histogram['sell_order_graph'][0][0]
+            'reference_price': histogram['sell_order_graph'][0][0],
+            'buy_price': buy_price,
         }
 
         if validator.validate(data):
-            buy_price = data['reference_price'] * .87 * (1 - wanted_profit /  100)
             print(f"Nice {TEST_ITEM}")
             print(f"Sell price: {data['reference_price']}")
             print(f"Buy order: {buy_price}")
