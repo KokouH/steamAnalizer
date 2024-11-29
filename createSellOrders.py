@@ -8,18 +8,19 @@ from steampy.client import SteamClient, GameOptions
 
 def main():
     if STEAM_PATH_COOKIES:
-        with open(STEAM_PATH_COOKIES, 'r') as file:
-            login_cookies = json.loads(file.read())
         if STEAM_PATH_GUARD:
             print("Try login with guard")
             steam_client = SteamClient(STEAM_API_KEY)
             steam_client.login(STEAM_LOGIN, STEAM_PASSWORD, STEAM_PATH_GUARD)
         else:
+            with open(STEAM_PATH_COOKIES, 'r') as file:
+                login_cookies = json.loads(file.read())
             steam_client = SteamClient(STEAM_API_KEY, username=STEAM_LOGIN, login_cookies=login_cookies)
     else:
         steam_client = SteamClient(STEAM_API_KEY)
 
     assert steam_client.was_login_executed
+    print("Login success")
 
     with open("goods", 'r') as file:
         items = file.read().split('\n')

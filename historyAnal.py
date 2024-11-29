@@ -7,6 +7,8 @@ event_types
 3 - selled
 '''
 
+start_timestamp = 1731467755
+
 class Item:
     def __init__(self):
         self.name = ''
@@ -21,6 +23,9 @@ assets = data['assets']['252490']['2']
 
 for event in data['events']:
     if event['event_type'] != 4:
+        continue;
+    
+    if event['time_event'] < start_timestamp:
         continue;
 
     asset_id = data['listings'][event['listingid']]['asset']['id']
@@ -41,6 +46,9 @@ for event in data['events']:
 for event in data['events']:
     if event['event_type'] != 3:
         continue;
+    
+    if event['time_event'] < start_timestamp:
+        continue;
 
     asset_id = data['listings'][event['listingid']]['asset']['id']
     if (asset_id not in assets):
@@ -55,14 +63,37 @@ for event in data['events']:
             if it.sell_price == -1:
                 it.sell_price = sell_price
 
+def nice_print(item, sizes=[10, 4, 4, 5, 5]):
+    output = [
+        item.name,
+        str(item.buy_price),
+        str(item.sell_price),
+        str((item.sell_price / item.buy_price - 1) * 100),
+        '' if item.buy_price <= item.sell_price else "MINUS"
+    ]
+
+    for i in range(len(output)):
+        if len(output[i]) < sizes[i]:
+            output[i] += sizes[i] * ' '
+
+        output[i] = output[i][:sizes[i]]
+
+    print(' | '.join(output))
+
 all_buy = 0
 all_sell = 0
-for item in output:
-    # if item.sell_price > 0:
-        # print(f'{item.name}: {item.buy_price} {item.sell_price}')
-    all_buy += item.buy_price
-    all_sell += item.sell_price
+sizes = [0, 4, 4, 5, 5]
+sizes[0] = max(len(i.name) for i in output)
 
-print(f"Profit: {all_buy * (all_sell / all_buy - 1) / 100}")
+use_filter = True
+
+for item in output:
+
+    if item.sell_price > 0 or not use_filter:
+        nice_print(item, sizes)
+        all_buy += item.buy_price
+        all_sell += item.sell_price
+
+print(f"Profit: {all_buy * (all_sell / all_buy - 1) / 100} {(all_sell / all_buy - 1)}")
 
 
