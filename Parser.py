@@ -1,12 +1,27 @@
 
 import requests
 import datetime
+import time
 import json
 
 class Parser:
-    def __init__(self) -> None:
+    def __init__(self, with_retry: bool = True) -> None:
         self.last_page = None
         self.ses = requests.Session()
+        self.with_retry = with_retry
+        self.retry_time = 90
+        self.retry_count = 3
+
+    def ses_get(self, *args, **kwargs) -> requests.Response:
+        cout = 0
+        while cout < self.retry_count:
+            res = self.ses.get(*args, **kwargs)
+            if res.status_code == 200:
+                return res
+            time.sleep(self.retry_time)
+            cout += 1
+
+        return None
 
     def get_itemid_from_page(self, page: str):
         if page == None:
@@ -22,7 +37,7 @@ class Parser:
         
 
     def get_item_page(self, hash_name: str, appid: int = 252490):
-        res = self.ses.get(f'https://steamcommunity.com/market/listings/{appid}/{hash_name}')
+        res = self.ses_get(f'https://steamcommunity.com/market/listings/{appid}/{hash_name}')
         if res.status_code != 200:
             self.last_page = res.text
             return None
@@ -30,7 +45,7 @@ class Parser:
         return res.text
     
     def get_item_histogram(self, itemid: int):
-        res = self.ses.get(f'https://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={itemid}')
+        res = self.ses_get(f'https://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={itemid}')
         if res.status_code != 200:
             return None
         

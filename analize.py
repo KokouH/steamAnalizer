@@ -20,6 +20,9 @@ sell_conf = 0.1
 WINDOW_SIZE = 10
 THRESHOLD_MULTIPLIER = 2.5
 
+# Stable check
+THRESHOLD_STABLE = 0.4
+
 def remove_spikes(history):
     df = pd.DataFrame([i[1] for i in history], columns=['Value'])
     window_size = WINDOW_SIZE
@@ -98,6 +101,19 @@ def check_sell_in_history(data):
 
     return above_sells / all_sells > sell_conf
 
+def check_history_stable(data):
+    history = get_last_month(data['history'])
+    history = remove_spikes(history)
+
+    data = pd.Series([i[1] for i in history])
+    ws = int(min_sells_per_month / 15) # window size 2 days
+    moving_average = data.rolling(window=ws).mean()
+    std_dev = np.std(moving_average.dropna())
+
+    if std_dev < THRESHOLD_STABLE:
+        return True
+    return False
+
 def main():
     good_file = open('goods', 'w')
     bad_file = open('bad', 'w')
@@ -118,10 +134,13 @@ def main():
     for TEST_ITEM in item_hash_names:
         parser.get_item_page(TEST_ITEM)
         itemId = parser.get_itemid_from_page(parser.last_page)
-        if parser.last_page == None or itemId == None:
+        histogram = parser.get_item_histogram(itemId)
+        if (parser.last_page == None 
+            or itemId == None
+            or histogram == None
+        ):
             time.sleep(90)
             continue
-        histogram = parser.get_item_histogram(itemId)
         history = parser.get_history(parser.last_page)
         reference_price = histogram['sell_order_graph'][0][0]
         buy_price = reference_price * .87 * (1 - wanted_profit /  100)
